@@ -1,5 +1,5 @@
 import java.io.*;
-import java.util.*;
+import java.util.*  ;
 
 public class Lab1_GraphProcessor {
     static class Graph {
@@ -77,12 +77,62 @@ public class Lab1_GraphProcessor {
         }
     }
 
-    public static void showDirectedGraph(Graph G) {
+    public static void showDirectedGraph1(Graph G) {
         for (String from : G.adj.keySet()) {
             for (Map.Entry<String, Integer> entry : G.adj.get(from).entrySet()) {
                 System.out.printf("%s -> %s [weight=%d]\n", from, entry.getKey(), entry.getValue());
             }
         }
+
+
+
+    }
+
+    public static void showDirectedGraph(Graph G) {
+        // 生成DOT图形描述语言
+        StringBuilder dot = new StringBuilder();
+        dot.append("digraph G {\n");
+        dot.append("    rankdir=LR;\n");
+        dot.append("    node [shape=circle];\n");
+
+        // 添加所有边
+        for (String from : G.adj.keySet()) {
+            for (Map.Entry<String, Integer> entry : G.adj.get(from).entrySet()) {
+                String to = entry.getKey();
+                int weight = entry.getValue();
+                dot.append(String.format("    \"%s\" -> \"%s\" [label=\"w=%d\"];\n",
+                        escapeQuotes(from), escapeQuotes(to), weight));
+            }
+        }
+
+        dot.append("}");
+
+        // 生成图片文件
+        try {
+            // 写入DOT文件
+            File dotFile = new File("graph.dot");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(dotFile))) {
+                writer.write(dot.toString());
+            }
+
+            // 调用Graphviz生成图片（需安装Graphviz并添加至PATH）
+            ProcessBuilder pb = new ProcessBuilder("dot", "-Tpng", "graph.dot", "-o", "graph.png");
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+
+            if(exitCode == 0) {
+                System.out.println("图形文件已生成: graph.png");
+            } else {
+                System.err.println("图形生成失败，请检查Graphviz安装");
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 处理特殊字符转义
+    private static String escapeQuotes(String str) {
+        return str.replace("\"", "\\\"");
     }
 
     public static String queryBridgeWords(String word1, String word2) {
